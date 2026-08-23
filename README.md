@@ -46,6 +46,7 @@ tp1-llm/
 │           └── cv_summary.csv    # mean ± std per config, goes into the presentation
 ├── outputs/
 │   └── figures/
-└── slides/
-    └── presentacion.pptx
+├── slides/
+│   └── presentacion.pptx
+└── adr/                          # Architecture Decision Records
 ```
