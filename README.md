@@ -1,52 +1,28 @@
 # BTR-Transformer
 
-## Project Structure
+University TP1 (73.69 LLM, 2026): predict supermarket e-commerce **Buy Through Rate** via impression-level `bought`, with a **small Transformer encoder** on product text plus an MLP on tabular features.
 
-```
-tp1-llm/
-├── README.md
-├── requirements.txt
-├── .gitignore
-├── data/
-│   ├── raw/
-│   │   └── supermarket_products.csv
-│   └── processed/
-│       ├── dataset.parquet       # full cleaned/encoded dataset (for k-fold)
-│       ├── train.parquet         # fixed split, for fast iteration
-│       ├── valid.parquet         # fixed split
-│       └── test.parquet          # final held-out set, touched once in both modes
-├── notebooks/
-│   ├── 01_eda.ipynb
-│   ├── 02_results_analysis.ipynb   # plots for fixed split (architecture iteration)
-│   └── 03_cv_analysis.ipynb        # plots for k-fold (final comparison / ablation)
-├── src/
-│   ├── data/
-│   │   ├── preprocessing.py      # cleaning, one-hot encoding → produces dataset.parquet + test.parquet
-│   │   ├── fixed_split.py        # generates train/valid.parquet from dataset.parquet
-│   │   ├── splits.py             # GroupKFold(groups=query_id) over dataset.parquet
-│   │   └── dataset.py            # PyTorch Dataset: groups by query_id, padding, mask
-│   ├── models/
-│   │   ├── text_encoder.py
-│   │   ├── tabular_encoder.py
-│   │   └── transformer.py
-│   ├── train.py                  # --mode {fixed, cv} --fold N (only if mode=cv)
-│   ├── evaluate.py               # PR-AUC, ROC-AUC; aggregates results if mode=cv
-│   └── config.py                 # includes architecture variants to compare
-├── experiments/
-│   ├── dev/                      # fixed-split runs, during architecture iteration
-│   │   ├── config_A/
-│   │   ├── config_B/
-│   │   └── ...
-│   └── final_cv/                 # k-fold, only for the 2-3 finalist configs
-│       ├── config_A/
-│       │   ├── fold_0/ ... fold_4/
-│       ├── config_B/
-│       │   ├── fold_0/ ... fold_4/
-│       └── results/
-│           └── cv_summary.csv    # mean ± std per config, goes into the presentation
-├── outputs/
-│   └── figures/
-├── slides/
-│   └── presentacion.pptx
-└── adr/                          # Architecture Decision Records
-```
+**Phase:** design documentation only. No notebook or training code yet.
+
+## Read first
+
+- [docs/README.md](docs/README.md) — index
+- [docs/DESIGN.md](docs/DESIGN.md) — pipeline
+- [docs/OPEN_DECISIONS.md](docs/OPEN_DECISIONS.md) — change these before implementation
+- [docs/NOTEBOOK_SPEC.md](docs/NOTEBOOK_SPEC.md) — future Colab cell plan
+- [adr/](adr/) — why each decision was made
+
+Assignment PDF: [docs/DeepLearningTP0.pdf](docs/DeepLearningTP0.pdf).
+
+## Data
+
+- File: `data/raw/supermarket_products.csv` (gitignored)
+- 10 000 impressions, 2 012 queries, 13.01% `bought=True`
+
+## Planned artifact (not written)
+
+A single Google Colab notebook implementing setup → feature engineering → grouped splits → preprocess → hybrid model → train/eval → tabular ablation.
+
+## Deferred
+
+The previous `src/` + parquet tree is **not** the v1 delivery. See [adr/0008](adr/0008-delivery-colab-notebook.md).
