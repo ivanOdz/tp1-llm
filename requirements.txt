@@ -1,0 +1,23 @@
+# TP1 73.69 LLM 2026 — BTR-Transformer
+# Local Jupyter execution (docs/DESIGN.md §8, D21). Install with:
+#   python -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements.txt
+#
+# The notebook asserts these versions at startup rather than installing them.
+
+# Deep learning
+torch==2.13.0
+transformers==5.16.1
+
+# Data and modeling
+numpy==2.3.5
+pandas==2.3.3
+scikit-learn==1.7.2
+
+# Plots
+matplotlib==3.10.0
+seaborn==0.13.2
+
+# Notebook runtime
+jupyterlab==4.6.3
+ipykernel==7.3.0

@@ -5,7 +5,7 @@
 
 ## Context
 
-The assignment prompt asks to drop `cart` and `query_id` to avoid leakage and overfitting. The CSV confirms a stronger fact: **every purchase has `cart=True`**, and **no purchase has `cart=False`**. `query_id` is a high-cardinality search key (2 012 values).
+The PDF lists `cart` and `query_id` as dataset columns but gives no instruction about either, so excluding them is **our decision, derived from the data**, not a stated requirement. The CSV makes the case directly: **every purchase has `cart=True`**, and **no purchase has `cart=False`**, i.e. \(P(bought \mid cart=\text{false}) = 0\). `query_id` is a high-cardinality search key (2 012 values).
 
 ## Decision
 
@@ -16,6 +16,7 @@ The assignment prompt asks to drop `cart` and `query_id` to avoid leakage and ov
 
 - Honest impression-level BTR model.
 - Split code depends on `query_id` internally ([adr/0005](0005-grouped-splits.md)).
+- The same render-time test is what flags the behavioural cue in `title`/`description` as a target-derived proxy ([adr/0009](0009-text-behavioural-cue.md)). That cue passes the render-time test where `cart` fails it, which is why it is kept and ablated rather than dropped.
 
 ## Alternatives
 

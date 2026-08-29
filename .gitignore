@@ -1,1 +1,17 @@
+# Data (provided by the course, not redistributed)
 data/raw/supermarket_products.csv
+
+# Model checkpoints (docs/NOTEBOOK_SPEC.md §Runtime file layout)
+*.pt
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Hugging Face tokenizer cache, if placed in-tree
+.hf_cache/

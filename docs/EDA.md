@@ -18,8 +18,8 @@ Computed from `data/raw/supermarket_products.csv` (not assumed from the PDF). Al
 | `timestamp` | object (ISO UTC) | 9 999 | cyclical time |
 | `query_id` | object | 2 012 | **split grouping only** |
 | `filter_category` | object | 12 | raw filter (see degeneracy) |
-| `filter_price_min` | float64 | 393 | raw filter → distance |
-| `filter_price_max` | float64 | 1 167 | raw filter → distance |
+| `filter_price_min` | float64 | 393 | raw filter → `relative_price_position` |
+| `filter_price_max` | float64 | 1 167 | raw filter → `relative_price_position` |
 | `filter_storage_type` | object | 3 | raw filter (see degeneracy) |
 | `cart` | bool | 2 | **leakage — drop** |
 | `bought` | bool | 2 | **target** |
@@ -72,7 +72,8 @@ Implications:
 
 - `is_category_match` and `is_storage_match` are **constant 1**. They encode the intended *interaction idea* but carry **zero variance** here.
 - Raw `filter_category` / `filter_storage_type` would duplicate `category` / `storage_type` one-hots. Dropping raw `filter_*` after engineering is correct.
-- `price_distance_min = price - filter_price_min` and `price_distance_max = filter_price_max - price` are **always ≥ 0** and **do vary**. They are the only non-degenerate filter-derived signals: position of price inside the selected band.
+- Absolute band distances (`price - filter_price_min`, `filter_price_max - price`) vary but are collinear with band width; the useful signal is **where** price sits inside the band.
+- **Only filter-derived feature kept:** `relative_price_position = (price - filter_price_min) / (filter_price_max - filter_price_min)` (already in \([0, 1]\) on this CSV; guard zero-width bands). Do **not** feed the two raw distances.
 
 Recommended handling is in [OPEN_DECISIONS.md](OPEN_DECISIONS.md) D1 and [adr/0003](../adr/0003-feature-engineering.md).
 
@@ -90,12 +91,42 @@ Recommended handling is in [OPEN_DECISIONS.md](OPEN_DECISIONS.md) D1 and [adr/00
 Concatenated `title + description + ingredients` is short:
 
 - Whitespace tokens: mean **~40**, max **50**.
-- Titles look like catalog strings with brand, product, pack size, and a parenthetical quality cue.
-- Descriptions are **highly templated** (“for online grocery orders. Listed under …”). Signal may be weak; ablation (tabular-only) is how we find out.
+- BERT WordPiece, including `[CLS]`/`[SEP]` and two `[SEP]` field separators: mean **55.6**, p95 **64**, **max 74**. See D10.
+- Titles look like catalog strings with brand, product, pack size, and a parenthetical cue.
+- Descriptions are **highly templated** (“for online grocery orders. Listed under …”).
+
+### The text carries almost all the signal — via a behavioural cue (critical)
+
+Measured on a grouped 70/15/15 split, seed 42:
+
+| Model | ROC-AUC | PR-AUC | Baseline |
+| --- | ---: | ---: | ---: |
+| Logistic regression, full 62-dim tabular block | 0.517 | 0.141 | 0.137 |
+| Gradient boosting, full 62-dim tabular block | 0.551 | 0.154 | 0.137 |
+| TF-IDF on concatenated text | 0.955 | 0.648 | 0.132 |
+| **Title parenthetical alone, mapped to its train purchase rate** | **0.960** | **0.670** | 0.132 |
+
+The whole tabular pipeline is close to noise. The title parenthetical takes 20 values in three regimes:
+
+| Cue group | n | Purchase rate |
+| --- | ---: | ---: |
+| Customer Favorite, Best Seller, Top Rated, #1 Pick | 1 931 | 0.63 – 0.68 |
+| Well Reviewed, Shopper Favorite, Highly Rated, Popular Choice | 1 973 | 0.02 – 0.04 |
+| Remaining 12 (Clearance Listing, Rarely Reordered, Standard Listing, …) | 6 096 | 0.00 |
+
+Top TF-IDF n-grams: `most repurchased`, `frequently reordered`, `returning customers`, `customer pick`. Bottom: `less repurchased`, `rarely reordered`, `limited`. `description` restates the same behaviour, so deleting the title parenthetical and the final description sentence still leaves ROC-AUC **0.953** — the cue is redundantly encoded across both fields.
+
+This is a target-derived proxy visible at render time, not `cart`-style leakage. Handling — keep it, and ablate against a cue-stripped arm — is [adr/0009](../adr/0009-text-behavioural-cue.md).
+
+### Metric noise floor
+
+Across 20 grouped seeds at 85/15, a near-null tabular model gives test ROC-AUC 0.571 ± 0.019 and PR-AUC 0.160 ± 0.016 (range 0.129 – 0.193). Held-out prevalence itself varies 0.118 – 0.153 (sd 0.009). **Differences below ~0.05 PR-AUC are not resolvable on a single split**, and because PR-AUC's baseline *is* the prevalence, valid and test PR-AUC are not directly comparable unless splits are prevalence-stratified. See D15 and D16.
 
 ## Physical volume
 
-`dimensions_in` looks like `3.3 x 4.0 x 4.1"`. A three-float `L x W x H` parse succeeds on **all 10 000** rows. Product of sides: median ~109 in³, heavy right tail (max ~3404). Scale after median impute.
+`dimensions_in` looks like `3.3 x 4.0 x 4.1"`. A three-float `L x W x H` parse succeeds on **all 10 000** rows. Product of sides: median ~109 in³, heavy right tail (max ~3404).
+
+Raw `volume` has skew **2.97**; after `StandardScaler` its max \(|z|\) is **9.61** and **50 rows** exceed \(|z| > 5\). Applying `log1p` first brings skew to **0.44** and max \(|z|\) to **3.05**. The other three numerics need no transform (max \(|z|\): `price` 4.68, `net_weight_oz` 4.36, `nutrition_score` 1.96). Decision: **`log1p` on `volume` only**, then median impute and scale (D17).
 
 ## Time
 
