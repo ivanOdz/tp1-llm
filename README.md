@@ -2,7 +2,7 @@
 
 University TP1 (73.69 Large Language Models, 2026): predict supermarket e-commerce **Buy Through Rate** via impression-level `bought`, using a **small Transformer encoder trained from scratch** on product text plus an MLP on tabular features.
 
-**Phase:** design documentation, audited and reconciled. No notebook or training code yet.
+**Phase:** notebook groups 0–7 implemented (environment through training machinery, one-batch smoke test). No reported training runs yet. Groups 8–12 are a placeholder.
 
 ## Read first
 
@@ -27,9 +27,9 @@ The dataset **encodes the target in the catalog text**. A single behavioural phr
 
 The project reports this deliberately rather than presenting it as an architecture result. See [adr/0009](adr/0009-text-behavioural-cue.md).
 
-## Planned artifact
+## Artifact
 
-`notebooks/btr_transformer.ipynb` — setup → EDA with cue audit → feature engineering → stratified grouped splits → preprocessing → hybrid model → baselines → three ablation arms → scale-up → discussion.
+[`notebooks/btr_transformer.ipynb`](notebooks/btr_transformer.ipynb) — setup → EDA with cue audit → feature engineering → stratified grouped splits → preprocessing → hybrid model → training helpers. Still to run: baselines → three ablation arms → scale-up → discussion.
 
 Three arms, identical splits and seeds:
 

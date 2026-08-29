@@ -1,10 +1,8 @@
-# Notebook spec (cells, no code)
+# Notebook spec
 
-Artifact to generate later: `notebooks/btr_transformer.ipynb`. Environment: **local Jupyter**, GPU used if available, CPU adequate at this scale ([DESIGN.md](DESIGN.md) §8).
+Artifact: [`notebooks/btr_transformer.ipynb`](../notebooks/btr_transformer.ipynb). Groups 0–7 are implemented; 8–12 are a placeholder. Environment: **local Jupyter**, GPU used if available, CPU adequate at this scale ([DESIGN.md](DESIGN.md) §8).
 
 Each section below is one or more **sequential cells**. Implementation must follow [DESIGN.md](DESIGN.md) unless an [open decision](OPEN_DECISIONS.md) was changed.
-
-Do not implement this file yet.
 
 ---
 
@@ -120,8 +118,18 @@ Not committed (gitignored):
 - `best_arm_a.pt`, `best_arm_b.pt`, `best_arm_c.pt` — must match [DESIGN.md](DESIGN.md) §8
 - matplotlib figures inline
 
-Repo layout after implementation (planned, not created now):
+Repo layout:
 
-- `notebooks/btr_transformer.ipynb`
+- `notebooks/btr_transformer.ipynb` (groups 0–7 implemented)
 - `data/raw/supermarket_products.csv` (gitignored if large)
 - these `docs/` and `adr/` files
+
+## Implementation notes (groups 0–7)
+
+Ordering corrections so the notebook is executable; not new design decisions.
+
+- Tokenizer is loaded in group 1, not 4.4. Group 2.7 needs `tokenizer.sep_token` to build `text_full` / `text_stripped`.
+- Cue-stripping is defined in group 2, not 9.2. The TF-IDF verification probe stays in group 9.
+- `split_queries(...)` is defined as a helper in group 1 and called again in group 3. The cue audit (1.6) needs a grouped split to fit its probes.
+- `query_id` is dropped from the feature frames in 3.3 as specified, but an aligned `np.ndarray` of query ids is retained per split so `per_query_metrics` (7.2) is implementable.
+- Cue stripping is an exact set-membership deletion (19 description templates + title parenthetical), not a fuzzy regex, because the CSV supports it.

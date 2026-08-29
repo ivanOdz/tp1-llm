@@ -106,13 +106,13 @@ Measured on a grouped 70/15/15 split, seed 42:
 | TF-IDF on concatenated text | 0.955 | 0.648 | 0.132 |
 | **Title parenthetical alone, mapped to its train purchase rate** | **0.960** | **0.670** | 0.132 |
 
-The whole tabular pipeline is close to noise. The title parenthetical takes 20 values in three regimes:
+The whole tabular pipeline is close to noise. The title parenthetical takes **19** distinct values. A further **511** titles have no parenthetical (treated as an explicit `"None"` level). Together these 20 levels split into three purchase-rate regimes:
 
 | Cue group | n | Purchase rate |
 | --- | ---: | ---: |
 | Customer Favorite, Best Seller, Top Rated, #1 Pick | 1 931 | 0.63 – 0.68 |
 | Well Reviewed, Shopper Favorite, Highly Rated, Popular Choice | 1 973 | 0.02 – 0.04 |
-| Remaining 12 (Clearance Listing, Rarely Reordered, Standard Listing, …) | 6 096 | 0.00 |
+| Remaining 12 parentheticals + 511 titles with no cue (`None`) | 6 096 | 0.00 |
 
 Top TF-IDF n-grams: `most repurchased`, `frequently reordered`, `returning customers`, `customer pick`. Bottom: `less repurchased`, `rarely reordered`, `limited`. `description` restates the same behaviour, so deleting the title parenthetical and the final description sentence still leaves ROC-AUC **0.953** — the cue is redundantly encoded across both fields.
 

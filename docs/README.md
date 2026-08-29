@@ -1,6 +1,6 @@
-# Design documentation (no code yet)
+# Design documentation
 
-This folder captures **implementation decisions** for TP1 (73.69 LLM, 2026) before any notebook or source is written.
+This folder captures **implementation decisions** for TP1 (73.69 LLM, 2026). The train-ready notebook lives at [`notebooks/btr_transformer.ipynb`](../notebooks/btr_transformer.ipynb) (groups 0–7).
 
 | Doc | Purpose |
 | --- | --- |
@@ -12,4 +12,4 @@ This folder captures **implementation decisions** for TP1 (73.69 LLM, 2026) befo
 
 Architecture Decision Records live in [`adr/`](../adr/). Read those when you want the **why**, not the full pipeline. Start with [adr/0009](../adr/0009-text-behavioural-cue.md) — it is the decision that reshaped the experimental design.
 
-**Current phase:** documentation only, post-audit. The design has been reconciled against the CSV and the PDF; open items are D24 (Exercise 3 owner) and the detail-level defaults in D2, D8, D9, D13. Do not generate `.ipynb` until a later prompt asks for a plan, then code.
+**Current phase:** notebook groups 0–7 are implemented. Open items are D24 (Exercise 3 owner), the detail-level defaults in D2, D8, D9, D13, and notebook groups 8–12 (baselines, three arms, discussion, scale-up, Exercise 3).
