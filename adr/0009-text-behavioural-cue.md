@@ -10,10 +10,12 @@
 
 | Model | ROC-AUC | PR-AUC | Baseline |
 | --- | ---: | ---: | ---: |
-| Logistic regression, full 62-dim tabular block | 0.517 | 0.141 | 0.137 |
-| Gradient boosting, full 62-dim tabular block | 0.551 | 0.154 | 0.137 |
-| TF-IDF on concatenated text | 0.955 | 0.648 | 0.132 |
-| Title parenthetical alone, mapped to its train purchase rate | 0.960 | 0.670 | 0.132 |
+| Logistic regression, full 62-dim tabular block | 0.568 | 0.145 | 0.130 |
+| Gradient boosting, full 62-dim tabular block | 0.595 | 0.169 | 0.130 |
+| TF-IDF on concatenated text | 0.963 | 0.683 | 0.130 |
+| Title parenthetical alone, one-hot → logistic regression | 0.957 | 0.629 | 0.130 |
+
+(Figures restated on the stratified split of D15; the pre-stratification revision read 0.517 / 0.551 / 0.955 / 0.960.)
 
 The dominant predictor is a behavioural phrase embedded in `title` and restated in `description`. The title parenthetical takes 20 values that split into three regimes:
 
@@ -51,7 +53,7 @@ Report all three arms with non-neural baselines (majority-rate, logistic regress
 
 - The presentation's headline finding becomes **"the target is encoded in the catalog text, and here is how we detected and quantified it"** — a leakage-analysis result, reported deliberately rather than discovered as an unexplained gap in a comparison table.
 - Arm A vs Arm C is no longer evidence that "attention on product language helps". That claim, if made at all, rests on Arm B vs Arm C.
-- Arm B is expected to land near the tabular baseline. A flat result there is a valid, reportable outcome and must **not** be treated as underfitting (see [ADR 0007](0007-training-ablation.md) and the revised diagnostic in [DESIGN.md](../docs/DESIGN.md) §7).
+- Arm B is expected to land near the tabular baseline. A flat result there is a valid, reportable outcome and must **not** be treated as underfitting (see [ADR 0007](0007-training-ablation.md) and the revised diagnostic in [DESIGN.md](../docs/DESIGN.md) §7). **Measured outcome:** Arm B reaches test ROC-AUC 0.5603 ± 0.0086 against Arm C's 0.5665 ± 0.0118 — indistinguishable, with the point estimate favouring the arm *without* the encoder. The language claim is not supported.
 - Exercise 2's "comparación de alternativas de los distintos módulos" is satisfied empirically by three arms plus baselines, not by prose alone.
 - Cost: three training runs instead of two, plus the stripping regex and its verification probe.
 
