@@ -97,14 +97,17 @@ Concatenated `title + description + ingredients` is short:
 
 ### The text carries almost all the signal — via a behavioural cue (critical)
 
-Measured on a grouped 70/15/15 split, seed 42:
+Measured on the locked grouped 70/15/15 split, seed 42, **stratified on has-≥1-purchase** (D15). Test-split figures, reproduced by notebook groups 1 and 8:
 
 | Model | ROC-AUC | PR-AUC | Baseline |
 | --- | ---: | ---: | ---: |
-| Logistic regression, full 62-dim tabular block | 0.517 | 0.141 | 0.137 |
-| Gradient boosting, full 62-dim tabular block | 0.551 | 0.154 | 0.137 |
-| TF-IDF on concatenated text | 0.955 | 0.648 | 0.132 |
-| **Title parenthetical alone, mapped to its train purchase rate** | **0.960** | **0.670** | 0.132 |
+| Logistic regression, full 62-dim tabular block | 0.568 | 0.145 | 0.130 |
+| Gradient boosting, full 62-dim tabular block | 0.595 | 0.169 | 0.130 |
+| TF-IDF on concatenated text | 0.963 | 0.683 | 0.130 |
+| **Title parenthetical alone, one-hot → logistic regression** | **0.957** | **0.629** | 0.130 |
+| TF-IDF on cue-stripped text | 0.520 | 0.137 | 0.130 |
+
+> **Superseded figures.** An earlier revision of this table reported 0.517 / 0.551 / 0.955 / 0.960, measured before D15 made the split prevalence-stratified. The conclusion is unchanged and the tabular numbers moved *up*, not down. The last row is new and is the load-bearing one: once the cue is removed, bag-of-words on the remaining product language is at 0.520, i.e. a coin flip.
 
 The whole tabular pipeline is close to noise. The title parenthetical takes **19** distinct values. A further **511** titles have no parenthetical (treated as an explicit `"None"` level). Together these 20 levels split into three purchase-rate regimes:
 
@@ -114,7 +117,7 @@ The whole tabular pipeline is close to noise. The title parenthetical takes **19
 | Well Reviewed, Shopper Favorite, Highly Rated, Popular Choice | 1 973 | 0.02 – 0.04 |
 | Remaining 12 parentheticals + 511 titles with no cue (`None`) | 6 096 | 0.00 |
 
-Top TF-IDF n-grams: `most repurchased`, `frequently reordered`, `returning customers`, `customer pick`. Bottom: `less repurchased`, `rarely reordered`, `limited`. `description` restates the same behaviour, so deleting the title parenthetical and the final description sentence still leaves ROC-AUC **0.953** — the cue is redundantly encoded across both fields.
+Top TF-IDF n-grams: `most repurchased`, `frequently reordered`, `returning customers`, `customer pick`. Bottom: `less repurchased`, `rarely reordered`, `limited`. `description` restates the same behaviour, so the cue cannot be removed by deleting one span. The stripping implemented in notebook group 2 removes the title parenthetical **and** the 19 behavioural description templates; group 9 verifies that the 11 behavioural n-grams in a probe's top-30 coefficients drop to **0**, and the resulting text scores **0.520** under TF-IDF.
 
 This is a target-derived proxy visible at render time, not `cart`-style leakage. Handling — keep it, and ablate against a cue-stripped arm — is [adr/0009](../adr/0009-text-behavioural-cue.md).
 

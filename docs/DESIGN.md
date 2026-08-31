@@ -275,7 +275,18 @@ Without these, "does the Transformer help?" has no reference point and the PDF's
 
 ### 7.2 Run repeats and reported dispersion
 
-A single grouped split cannot resolve PR-AUC differences below **~0.05** ([EDA.md](EDA.md) §Metric noise floor). Every arm is therefore run over **5 seeds** on the same split protocol, and the comparison table reports **mean ± sd**. This is not k-fold — the train/valid/test protocol is unchanged — so it does not reopen the locked split decision (D16).
+Every arm is run over **5 seeds** and the comparison table reports **mean ± sd**. This is not k-fold — the train/valid/test protocol is unchanged — so it does not reopen the locked split decision (D16).
+
+**What that ± actually measures.** The split is computed once, from `SEED`, and is identical for every arm and every configuration. The 5 seeds therefore vary only *training* stochasticity — weight initialisation and batch order — not the partition. They do **not** sample the ±0.016 split-level noise floor of [EDA.md](EDA.md) §Metric noise floor, which was measured across 20 *different* grouped splits.
+
+The two dispersions answer different questions and must not be swapped:
+
+| Dispersion | Measured by | Applies to |
+| --- | --- | --- |
+| Seed sd (reported ±) | 5 initialisations on one fixed split | Whether two arms differ **on this split** |
+| Split sd (±0.016 PR-AUC) | 20 grouped re-splits, EDA | Whether a result would survive a **different** partition |
+
+Because all arms share the split, its idiosyncrasy is a common-mode term that largely cancels in A vs C and B vs C. It does **not** cancel for absolute claims: any single reported number carries the larger split-level uncertainty on top of the seed sd shown.
 
 ### 7.3 Secondary per-query diagnostic
 
@@ -312,6 +323,6 @@ Execution target is **local Jupyter**, consistent with [NOTEBOOK_SPEC.md](NOTEBO
 
 - **The dataset encodes the target in the catalog text.** Arm A's ~0.96 ROC-AUC is a leakage-detection result, not an architecture result.
 - **The non-text feature block is near-noise** (gradient boosting: 0.551 ROC-AUC). Feature engineering quality cannot be judged from downstream metrics on this data.
-- **Evaluation is a single grouped split with seed repeats**, not k-fold. Reported dispersion is across seeds, not across data partitions.
+- **Evaluation is a single grouped split with seed repeats**, not k-fold. Reported dispersion is across seeds on one fixed partition, so it measures training stochasticity only; the larger split-level uncertainty (±0.016 PR-AUC) applies to every absolute number and is not visible in the reported ± (§7.2).
 - **BTR is a per-SERP rate, but the primary metrics pool globally.** A per-query diagnostic is reported alongside (§7.3) because 52.6% of queries have zero purchases and global ROC-AUC is therefore driven partly by between-query propensity rather than within-SERP ordering.
 

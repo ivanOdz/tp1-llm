@@ -13,3 +13,4 @@ Format: short markdown, one decision per file. Status is `Accepted` unless noted
 | [0007](0007-training-ablation.md) | PR-AUC early stopping and tabular ablation |
 | [0008](0008-delivery-notebook.md) | Notebook delivery; `src/` package deferred |
 | [0009](0009-text-behavioural-cue.md) | Behavioural cue in product text: keep, ablate against a stripped arm |
+| [0010](0010-architecture-grid.md) | Scale-up is a 3 x 2 factorial over encoder size and MLP width |

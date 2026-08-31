@@ -29,7 +29,8 @@ Legend: **Recommended** is the default if you say nothing. **Resolved** means th
 | D21 | Execution environment | **Resolved: local Jupyter**, pinned `requirements.txt`, no inline `pip install` | Colab; both with a guarded install cell | `DESIGN.md` §8 previously specified Colab against three other documents. |
 | D22 | Special tokens in mean pooling | **Resolved: include all non-pad positions** (`[CLS]`, `[SEP]`, field separators) | Mask out special tokens | Separators are content-bearing under D14; excluding them needs a second mask for no clear gain. Must be stated explicitly in the notebook. |
 | D23 | Per-query diagnostic | **Resolved: report mean per-query AP and recall@1** on queries with ≥1 purchase | Global metrics only | Diagnostic only — early stopping still uses global valid PR-AUC (locked). BTR is a per-SERP rate and 52.6% of queries have zero purchases. |
-| D24 | Exercise 3 owner | **Open — needs you** | — | Required third exercise (personalization), one slide. This CSV has no user identifier, so the answer is a design sketch. |
+| D24 | Exercise 3 owner | **Resolved: drafted in notebook group 14** | — | Design sketch written (no user identifier in this CSV). Still needs a **slide** made from it. |
+| D25 | What the scale-up varies | **Resolved: full 3 x 2 factorial** — encoder size (32/64/96) x MLP width (128-64 / 256-128) | Single base-to-large ladder; encoder axis only | A ladder confounds the two capacity axes; arm C has only the MLP axis. Dropout held at 0.2 so the head axis is width-only. [adr/0010](../adr/0010-architecture-grid.md). |
 
 ## Locked (do not reopen without a reason)
 
@@ -46,3 +47,4 @@ Legend: **Recommended** is the default if you say nothing. **Resolved** means th
 - Preprocessors fit on **train only**. Cue stripping is a fixed rule, not a fitted transform.
 - Test is evaluated **once per arm**, on that arm's final configuration. No exploratory exemption.
 - Three arms: A (full text), B (cue-stripped text), C (tabular-only). Claims about self-attention on language rest on **B vs C**, never A vs C.
+- Architecture grid reports **valid only**; one configuration per arm is promoted to the single test evaluation, enforced by a guard in `run_arm`.

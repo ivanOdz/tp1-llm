@@ -1,6 +1,6 @@
 # Notebook spec
 
-Artifact: [`notebooks/btr_transformer.ipynb`](../notebooks/btr_transformer.ipynb). Groups 0–7 are implemented; 8–12 are a placeholder. Environment: **local Jupyter**, GPU used if available, CPU adequate at this scale ([DESIGN.md](DESIGN.md) §8).
+Artifact: [`notebooks/btr_transformer.ipynb`](../notebooks/btr_transformer.ipynb). Groups 0–14 are implemented and executed. Environment: **local Jupyter**, GPU used if available, CPU adequate at this scale ([DESIGN.md](DESIGN.md) §8).
 
 Each section below is one or more **sequential cells**. Implementation must follow [DESIGN.md](DESIGN.md) unless an [open decision](OPEN_DECISIONS.md) was changed.
 
@@ -72,42 +72,52 @@ Keep `query_id` in the frame **until after the split**.
 ## Cell group 8 — Reference baselines
 
 1. Markdown: why non-neural baselines are required before any neural claim ([DESIGN.md](DESIGN.md) §7.1).
-2. Code: prevalence predictor, logistic regression and gradient boosting on the tabular block, and the title-cue one-hot model. Same grouped split.
-3. Code: baseline table (ROC-AUC, PR-AUC, prevalence floor per split).
+2. Code: six baselines on the locked split — prevalence constant, logistic regression and gradient boosting on the tabular block, title-cue one-hot → logistic regression, TF-IDF on full text, TF-IDF on cue-stripped text. All fitted transforms fit on train only.
+3. Output: baseline table with valid/test ROC-AUC, PR-AUC and the per-query diagnostics.
 
-## Cell group 9 — Three arms
+The last two rows are the non-neural analogues of arms A and B, so the neural arms have a bag-of-words reference and not only a tabular one.
 
-Each arm runs over **5 seeds** ([DESIGN.md](DESIGN.md) §7.2); report mean ± sd.
+## Cell group 9 — The three arms at the base configuration
 
-1. Markdown: Arm A (full text) / Arm B (cue-stripped) / Arm C (tabular-only) and the question each answers.
-2. Code: cue-stripping function + verification probe — assert the top TF-IDF coefficients of a probe model no longer contain behavioural n-grams ([adr/0009](../adr/0009-text-behavioural-cue.md)).
-3. Code: Arm A — train; plots of **train and valid** loss, ROC-AUC, PR-AUC vs epoch.
-4. Code: Arm B — train; same plots.
-5. Code: Arm C — train; same plots.
-6. Code: test metrics for each arm's best checkpoint, evaluated once.
-7. Code: unified comparison table — baselines + three arms: valid/test ROC-AUC and PR-AUC (mean ± sd), per-query AP and recall@1, parameter count, best epoch.
+1. Markdown: Arm A (full text) / B (cue-stripped) / C (tabular-only) and the question each answers.
+2. Code: cue-stripping verification probe — top ± TF-IDF n-grams before and after stripping; assert no behavioural n-gram survives in the top-30 ([adr/0009](../adr/0009-text-behavioural-cue.md) step 3).
+3. Code: run the three arms at `T2-base` + `M1-base` over `ARM_SEEDS`, valid metrics only, into the shared `RESULTS` cache.
+4. Code: 3×3 panel of **train and valid** loss / ROC-AUC / PR-AUC vs epoch, with the prevalence line drawn on the PR-AUC panels.
 
-## Cell group 10 — Discussion (markdown)
+Test is **not** touched here.
+
+## Cell group 10 — Architecture grid (3 Transformer × 2 MLP)
+
+Required by D19; shaped by [adr/0010](../adr/0010-architecture-grid.md).
+
+1. Markdown: the two factors, the configurations, and the valid-only selection rule.
+2. Code: full factorial over `T1-small` / `T2-base` / `T3-large` × `M1-base` / `M2-wide` on arms A and B; arm C over the MLP axis alone. The base cell is reused from group 9 rather than retrained.
+3. Code: grid table (params, valid ROC/PR mean ± sd, best epoch, seconds).
+4. Code: per-arm heatmap of valid PR-AUC, plus **main effects** — marginal means per factor compared against the mean within-configuration seed sd, so a factor that does not clear seed noise is reported as unresolved.
+
+## Cell group 11 — Final configuration and the single test evaluation
+
+1. Markdown: selection rule and the A→B cross-evaluation.
+2. Code: pick each arm's highest mean valid PR-AUC configuration, retrain over `ARM_SEEDS`, evaluate test **once** (guarded by `_TEST_EVALUATED`), and save `best_arm_{a,b,c}.pt`.
+3. Code: Arm A's final checkpoint additionally scored on cue-stripped test text — the distribution-shift probe, at no extra training cost — reported against the tabular ceiling and the prevalence floor.
+
+## Cell group 12 — Unified comparison table
+
+1. Markdown: what the table contains and why the per-query diagnostics are there (D23).
+2. Code: baselines + final arms in one frame; write `outputs/results.json`.
+3. Code: effect sizes against dispersion — A vs C and B vs C deltas compared against 2× the seed sd and against the EDA split-level noise floor.
+
+## Cell group 13 — Discussion (markdown)
 
 - **A vs C** measures cue visibility, not architecture value. Say so explicitly.
-- **B vs C** is the only pair that speaks to self-attention on product language. Interpret against the §7 diagnostic table: near-prevalence on both curves with a gradient-boosting baseline also near prevalence means *no signal*, not underfitting.
-- Degenerate match features: what we observed.
-- Metric dispersion across seeds vs the size of the deltas being claimed.
-- Limitations from [DESIGN.md](DESIGN.md) §10.
+- **B vs C** is the only pair that speaks to self-attention on product language. Interpret against the §7 diagnostic: near-prevalence on both curves *with a gradient-boosting baseline also near prevalence* means no signal, not underfitting.
+- What the architecture grid showed on each axis, and whether either cleared seed noise.
+- What the A→B collapse implies about what the encoder actually learned.
+- Degenerate match features; metric dispersion vs the size of the deltas claimed; limitations from [DESIGN.md](DESIGN.md) §10.
 
-## Cell group 11 — Architecture scale-up (required, not optional)
+## Cell group 14 — Exercise 3: personalization (markdown)
 
-The PDF's design question 2 asks for a small base architecture *and then* increasing complexity within available compute. This is graded, so it runs.
-
-1. Markdown: what is being scaled and why, with the compute budget.
-2. Code: at least two scale-up configurations on **Arm A and Arm B**, same splits and seeds — e.g. `d_model=96` and `num_encoder_layers=3`.
-3. Code: extend the comparison table with valid metrics for each configuration.
-
-**Test-set rule (no exceptions):** scale-up runs are selected on **valid** only. Test is evaluated once per arm, for the single configuration chosen as that arm's final model. Exploratory configurations report valid metrics and leave the `test` column empty. This matches [DESIGN.md](DESIGN.md) §4 — there is no exploratory-labelling exemption.
-
-## Cell group 12 — Exercise 3: personalization (markdown)
-
-Theoretical answer for the required third exercise ([ASSIGNMENT_MAPPING.md](ASSIGNMENT_MAPPING.md) §Exercise 3). Notebook carries a short version; the slide is the deliverable. Must state that this CSV has **no user identifier**, so the answer is a design sketch, not an experiment.
+Theoretical answer for the required third exercise ([ASSIGNMENT_MAPPING.md](ASSIGNMENT_MAPPING.md) §Exercise 3). Must state that this CSV has **no user identifier**, so the answer is a design sketch, not an experiment. Covers: what BTR becomes, data required, the two places personalization enters this architecture, the new splitting/leakage risk, cold start, and what the behavioural cue implies. The slide is the deliverable; the notebook carries the long form.
 
 ---
 
@@ -120,11 +130,11 @@ Not committed (gitignored):
 
 Repo layout:
 
-- `notebooks/btr_transformer.ipynb` (groups 0–7 implemented)
+- `notebooks/btr_transformer.ipynb` (groups 0–14)
 - `data/raw/supermarket_products.csv` (gitignored if large)
 - these `docs/` and `adr/` files
 
-## Implementation notes (groups 0–7)
+## Implementation notes
 
 Ordering corrections so the notebook is executable; not new design decisions.
 
@@ -133,3 +143,6 @@ Ordering corrections so the notebook is executable; not new design decisions.
 - `split_queries(...)` is defined as a helper in group 1 and called again in group 3. The cue audit (1.6) needs a grouped split to fit its probes.
 - `query_id` is dropped from the feature frames in 3.3 as specified, but an aligned `np.ndarray` of query ids is retained per split so `per_query_metrics` (7.2) is implementable.
 - Cue stripping is an exact set-membership deletion (19 description templates + title parenthetical), not a fuzzy regex, because the CSV supports it.
+- `BTR_FAST=1` shrinks the run to 1 seed / 2 epochs for an end-to-end smoke test. It changes no design decision and warns that its numbers are not reportable.
+- `run_arm` carries the `_TEST_EVALUATED` guard: a second test evaluation for the same arm name raises rather than silently reporting a second look.
+- The A→B cross-evaluation reuses Arm A's final checkpoint instead of training a fourth model, so it adds no compute and no extra test exposure.

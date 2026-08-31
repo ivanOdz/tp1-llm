@@ -35,7 +35,7 @@ Must include **at least one Transformer**, placed and justified. Design question
 
 Grading emphasis (PDF aclaración): design justification, **comparison of module alternatives**, and **ablation**. Satisfied empirically by three arms (full text / cue-stripped text / tabular-only) plus four reference baselines, not by prose alone — see [adr/0009](../adr/0009-text-behavioural-cue.md).
 
-**Note on the honest finding.** The dataset encodes the target in the catalog text: a single behavioural phrase in `title` predicts `bought` at ROC-AUC 0.960, against 0.551 for the entire engineered tabular block. The results section reports this as a leakage-detection outcome rather than presenting the hybrid-vs-tabular gap as evidence that self-attention on language helps.
+**Note on the honest finding.** The dataset encodes the target in the catalog text: a one-hot of a single behavioural phrase in `title` predicts `bought` at test ROC-AUC 0.957, against 0.595 for the entire engineered tabular block. Measured outcome of the ablation: Arm B (cue-stripped) 0.5603 ± 0.0086 vs Arm C (no encoder) 0.5665 ± 0.0118 — the Transformer over genuine product language adds nothing. The results section reports this as a leakage-detection outcome rather than presenting the hybrid-vs-tabular gap as evidence that self-attention on language helps.
 
 ## Exercise 3 — Personalización (theoretical)
 
@@ -63,8 +63,10 @@ The PDF requires: a repository with `README.md`, **the commit hash**, and the pr
 
 Checklist:
 
-- [ ] Git repository initialized and at least one commit made — the commit hash is a hard requirement and cannot be produced without it.
-- [ ] `README.md` current (phase, how to run, links to `docs/` and `adr/`).
-- [ ] Pinned `requirements.txt` so the notebook is reproducible.
-- [ ] `notebooks/btr_transformer.ipynb` runs top to bottom.
-- [ ] Slides covering problem → decisions → results → challenges → conclusions, plus the Exercise 3 slide.
+- [x] Git repository initialized and at least one commit made — the commit hash is a hard requirement and cannot be produced without it.
+- [x] `README.md` current (phase, how to run, links to `docs/` and `adr/`).
+- [x] Pinned `requirements.txt` so the notebook is reproducible.
+- [x] `notebooks/btr_transformer.ipynb` runs top to bottom — executed end to end on 2026-08-30, 38/38 code cells with stored outputs, ~2h05 on CPU.
+- [ ] **Slides** covering problem → decisions → results → challenges → conclusions, plus the Exercise 3 slide. `slides/` is still empty; this is the only remaining hard deliverable.
+
+Run artifacts: `outputs/results.json` (every configuration's per-seed rows and epoch histories), `outputs/figures/*.png`, `best_arm_{a,b,c}.pt` (gitignored).
